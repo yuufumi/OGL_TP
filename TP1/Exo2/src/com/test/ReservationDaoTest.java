@@ -2,11 +2,8 @@ package com.test;
 
 import com.example.dao.*;
 import com.example.entity.*;
-import org.junit.Before;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Assertions.*;
 import org.mockito.Mockito;
 
 import java.sql.Connection;
