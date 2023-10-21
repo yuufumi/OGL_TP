@@ -4,6 +4,8 @@ import com.example.dao.*;
 import com.example.entity.*;
 import com.example.service.IParkingPlaceManager;
 import com.example.service.ReservationManager;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -11,9 +13,7 @@ import org.mockito.Mockito;
 import java.sql.Connection;
 import java.util.Date;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class ReservationManagerTest {
     private DatabaseConnection dbc;
@@ -71,7 +71,7 @@ class ReservationManagerTest {
         parkingPlaceDao.setConn(con);
         parkingPlaceDao.insertParkingPlace(parkingPlace);
 
-        reservationStatus = ReservationStatus.CONFIRMED;
+        reservationStatus = ReservationStatus.PENDING;
         start_date = new Date(2023,10,10);
         end_date = new Date(2023,10,15);
 
@@ -83,17 +83,42 @@ class ReservationManagerTest {
         reservation.setUser(user);
         reservation.setParkingPlace(parkingPlace);
 
-        reservationDao = Mockito.mock(ReservationDao.class);
+        reservationDao = new ReservationDao();
+//        reservationDao.insertReservation(reservation);
         reservationDao.setConn(con);
 
         iParkingPlaceManager = Mockito.mock(IParkingPlaceManager.class);
         reservationManager = new ReservationManager();
         reservationManager.setReservationDao(reservationDao);
         reservationManager.setiPlaceManager(iParkingPlaceManager);
+//        reservationManager.createReservation(reservation);
+    }
+
+    @Test
+    public void cancelReservationTest() {
+        reservationDao = Mockito.mock(ReservationDao.class);
+        reservationManager.setReservationDao(reservationDao);
+        when(reservationDao.getReservationById(1)).thenReturn(reservation);
+        System.out.println(reservation.getReservationId());
+        reservationManager.cancelReservation(reservation.getReservationId());
+        Mockito.verify(reservationDao).updateReservationStatus(1, ReservationStatus.CANCELLED);
+//        Assertions.assertEquals(ReservationStatus.CANCELLED, reservationDao.getReservationById(1).getStatus());
+//        Mockito.verify(reservationDao, times(1).updateReservationStatus(1, ReservationStatus.CANCELLED));
+    }
+
+    @Test
+    public void cancelReservationIntegrationTest() {
+        reservationManager.setReservationDao(reservationDao);
+        reservationDao.insertReservation(reservation);
+        reservationManager.cancelReservation(reservation.getReservationId());
+        Reservation updatedReservation = reservationDao.getReservationById(reservation.getReservationId());
+        Assertions.assertEquals(ReservationStatus.CANCELLED, updatedReservation.getStatus());
     }
 
     @Test
     public void createReservationTest(){
+        reservationDao = Mockito.mock(ReservationDao.class);
+        reservationManager.setReservationDao(reservationDao);
 
         when(iParkingPlaceManager.isAvailable(1,start_date,end_date)).thenReturn(true);
 
@@ -103,14 +128,6 @@ class ReservationManagerTest {
         Mockito.verify(iParkingPlaceManager, times(1)).updateStatus(1, PlaceStatus.RESERVED);
     }
 
-    @Test
-    public void cancelReservationTest() {
-        when(reservationDao.getReservationById(1)).thenReturn(reservation);
-
-        reservationManager.cancelReservation(1);
-
-        Mockito.verify(reservationDao, times(1)).updateReservationStatus(1, ReservationStatus.CANCELLED);
-    }
 
 
 }

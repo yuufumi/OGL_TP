@@ -94,7 +94,7 @@ class ReservationDaoTest {
     @Test
     public void UpdateReservationStatusTest(){
         reservationDao.updateReservationStatus(1,ReservationStatus.CANCELLED);
-        assertEquals(reservationDao.getReservationById(1).getStatus(),ReservationStatus.PENDING);
+        assertEquals(reservationDao.getReservationById(1).getStatus(),ReservationStatus.CANCELLED);
     }
 
 }
